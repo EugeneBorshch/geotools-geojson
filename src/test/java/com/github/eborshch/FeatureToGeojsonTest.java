@@ -7,6 +7,8 @@ import org.geotools.feature.DefaultFeatureCollection;
 import org.geotools.feature.SchemaException;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.geotools.geometry.jts.JTSFactoryFinder;
+import org.json.simple.JSONValue;
+import org.junit.Assert;
 import org.junit.Test;
 import org.opengis.feature.simple.SimpleFeatureType;
 
@@ -19,18 +21,19 @@ import org.opengis.feature.simple.SimpleFeatureType;
 public class FeatureToGeojsonTest {
 
     @Test
-    public void testTransformation() throws SchemaException {
+    public void testConversion() throws SchemaException {
         DefaultFeatureCollection simpleFeatures = prepareTestData();
 
-        String to = new FeatureToGeoJson().to(simpleFeatures);
-        System.out.println(to);
+        String convertedGeojson = new FeatureToGeoJson().convert(simpleFeatures);
+        System.out.println(convertedGeojson);
 
+        Assert.assertNotNull(JSONValue.parse(convertedGeojson));
     }
 
     private DefaultFeatureCollection prepareTestData() throws SchemaException {
         SimpleFeatureType TYPE = DataUtilities.createType("Location",
-                "geometry:Point:srid=4326," + // <- the geometry attribute: Point type
-                        "ID:Integer," +
+                "geometry:Point:srid=4326," +
+                        "id:String," +
                         "name:String," +
                         "country:String"
         );
@@ -42,27 +45,15 @@ public class FeatureToGeojsonTest {
         SimpleFeatureBuilder featureBuilder = new SimpleFeatureBuilder(TYPE);
         GeometryFactory gf = JTSFactoryFinder.getGeometryFactory(null);
         featureBuilder.add(gf.createPoint(new Coordinate(12.5000, 41.8833)));
-        featureBuilder.add("Rome");
-        featureBuilder.add("Italy");
+        featureBuilder.set("name", "Rome");
+        featureBuilder.set("country", "Italy");
         features.add(featureBuilder.buildFeature("1"));
 
         // New York
         featureBuilder.add(gf.createPoint(new Coordinate(-74.0000, 40.7000)));
-        featureBuilder.add("New York");
-        featureBuilder.add("USA");
+        featureBuilder.set("name", "New York");
+        featureBuilder.set("country", "USA");
         features.add(featureBuilder.buildFeature("2"));
-
-        // Paris
-        featureBuilder.add(gf.createPoint(new Coordinate(2.3333, 48.8667)));
-        featureBuilder.add("Paris");
-        featureBuilder.add("France");
-        features.add(featureBuilder.buildFeature("3"));
-
-        // London
-        featureBuilder.add(gf.createPoint(new Coordinate(-0.0833, 51.5000)));
-        featureBuilder.add("London");
-        featureBuilder.add("England");
-        features.add(featureBuilder.buildFeature("4"));
 
         return features;
 
